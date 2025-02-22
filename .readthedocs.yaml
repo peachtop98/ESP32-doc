@@ -13,6 +13,7 @@ build:
 sphinx:
    configuration: source/conf.py
 
+# 安装需要安装的python库
 python:
   install:
     - requirements: requirements.txt
