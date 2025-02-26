@@ -35,7 +35,7 @@ html_search_language = 'en'  # 搜索语言设置
 
 #html_theme = 'alabaster'   classic   sphinx_rtd_theme    furo  press   sphinx_book_theme pydata_sphinx_theme
 #好看的    press  furo
-html_theme = 'press' #切换主题
+html_theme = 'furo' #切换主题
 html_static_path = ['_static']
 
 def setup(app):
