@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = '[希科普]ESP32文档'
+project = '[希科普]ESP32 '
 copyright = '2025, xavier'
 author = 'xavier'
 release = 'V1.8'
@@ -35,7 +35,7 @@ html_search_language = 'en'  # 搜索语言设置
 
 #html_theme = 'alabaster'   classic   sphinx_rtd_theme    furo  press   sphinx_book_theme pydata_sphinx_theme
 #好看的    press  furo
-html_theme = 'furo' #切换主题
+html_theme = 'sphinx_rtd_theme' #切换主题
 html_static_path = ['_static']
 
 def setup(app):
