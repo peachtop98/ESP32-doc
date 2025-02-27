@@ -1,5 +1,10 @@
 # 温湿度传感器模块使用说明
 
+```{admonition} 注意：
+:class: note
+所有类的使用都需要导入库文件：from educator import * 
+```
+
 ## 1. temp_hum.read_temp() - 读取温度
 
 ```python
@@ -16,11 +21,12 @@ temperature = temp_hum.read_temp()
 ### 典型应用示例
 
 ```python
-# 温度报警系统
-current_temp = temp_hum.read_temp()
-if current_temp is not None and current_temp > 35:
-    beep.time(1000)  # 高温报警
-    oled.print(1, 1, f"高温:{current_temp:.1f}℃")
+while True:
+    # 温度报警系统
+    current_temp = temp_hum.read_temp()
+    if current_temp is not None and current_temp > 35:
+        beep.time(1000)  # 高温报警
+        oled.print(1, 1, f"高温:{current_temp:.1f}℃")
 ```
 
 ------
@@ -41,11 +47,12 @@ humidity = temp_hum.read_hum()
 ### 典型应用示例
 
 ```python
-# 温湿度综合监测
-temp = temp_hum.read_temp()
-hum = temp_hum.read_hum()
-if temp is not None and hum is not None:
-    print(f"环境参数: {temp:.1f}℃/{hum:.1f}%")
+while True:
+    # 温湿度综合监测
+    temp = temp_hum.read_temp()
+    hum = temp_hum.read_hum()
+    if temp is not None and hum is not None:
+        print(f"环境参数: {temp:.1f}℃/{hum:.1f}%")
 ```
 
 ------
@@ -64,14 +71,6 @@ if temp is not None and hum is not None:
 
 ## 使用注意事项
 
-1. 传感器预热：
-
-```python
-# 首次使用需等待1分钟稳定
-time.sleep(60)
-first_reading = temp_hum.read_temp()
-```
-
 1. 复合数据采集：
 
 ```python
@@ -80,9 +79,15 @@ def read_both():
     temp = temp_hum.read_temp()
     hum = temp_hum.read_hum()
     return (temp, hum) if None not in (temp, hum) else (None, None)
+while True:
+    temp, hum = read_both()
+    if temp is not None and hum is not None:
+        print(f"当前温度: {temp}°C，当前湿度: {hum}%")
+    else:
+        print("无法获取温湿度数据，请检查传感器。")
 ```
 
-1. 异常处理机制：
+2. 异常处理机制：
 
 ```python
 # 带错误重试的读取
@@ -95,7 +100,7 @@ def safe_read(retries=3):
     return (None, None)
 ```
 
-1. 数据校准建议：
+3. 数据校准建议：
 
 ```python
 # 温度补偿示例（工厂校准参数）
@@ -103,11 +108,13 @@ CALIBRATION_OFFSET = -0.5  # 根据实际测试调整
 calibrated_temp = temp_hum.read_temp() + CALIBRATION_OFFSET
 ```
 
-1. 环境要求：
-   - 避免凝结水汽（湿度>80%时需注意）
-   - 测量时保持空气流通
-   - 避免阳光直射传感器
-2. 典型应用场景：
+4. 环境要求：
+
+- 避免凝结水汽（湿度>80%时需注意）
+- 测量时保持空气流通
+- 避免阳光直射传感器
+
+5. 典型应用场景：
 
 ```python
 # 智能温室控制系统
@@ -115,7 +122,9 @@ while True:
     t, h = temp_hum.read_temp(), temp_hum.read_hum()
     if t < 10:
         rgb.write_left(0, 0, 255)  # 低温蓝色提示
-    elif h > 70:
+    elif h > 50:
         rgb.write_left(255, 255, 0)  # 高湿度黄色提示
-    time.sleep(300)  # 5分钟采集一次
+    else :
+        rgb.write_left(0, 0, 0)  # 高湿度黄色提示
+    time.sleep(0.5)  
 ```

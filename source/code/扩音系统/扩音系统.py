@@ -1,5 +1,4 @@
 from educator import *  # 导入库文件
-from machine import *
 
 '''
 音量调节基于环境噪音的智能系统
@@ -8,7 +7,7 @@ from machine import *
 当检测到的噪音低于 700，则保持较低音量；否则，提高音量，以便于在嘈杂环境中也能听到音乐。
 
 '''
-mp3_player = ACB_MP3(port=2)
+mp3_player = Port2.init_mp3()  # 初始化 MP3 模块
 
 time.sleep(1)
 # 初始化当前音量
@@ -19,7 +18,7 @@ noise_level=0
 def fun(tim):
     global noise_level
     # 读取当前麦克风的声音值
-    noise_level = micro.read()
+    noise_level = mic.read()
     oled.print(4, 2, "sound: %d" % noise_level, 1)
 
 # 初始化并启动定时器
@@ -42,4 +41,3 @@ while(1):
 time.sleep(1)
 # 获取当前播放状态并打印
 mp3_player.getPlayState()
-

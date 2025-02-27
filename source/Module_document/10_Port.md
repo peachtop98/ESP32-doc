@@ -1,5 +1,10 @@
 # 多功能端口模块使用说明
 
+```{admonition} 注意：
+:class: note
+所有类的使用都需要导入库文件：from educator import * 
+```
+
 ## 全局端口实例
 
 ```python
@@ -39,10 +44,22 @@ Port1.output_IO(pin=1, value=1)  # 设置端口1的引脚1输出高电平
 
 ```python
 # 呼吸灯效果
+b, step, interval, direction = 0, 3, 20, 1
+max_brightness = 255  # 预定义常量
+
 while True:
-    for duty in range(0, 1024, 10):
-        Port1.output_IO(1, 1 if duty > 512 else 0)  # PWM模拟
-        time.sleep_ms(10)
+    on_time = (b * interval) // 255
+    Port1.output_IO(1, 1)
+    time.sleep_ms(on_time)
+    
+    Port1.output_IO(1, 0)
+    time.sleep_ms(interval - on_time)
+    
+    b += step * direction
+    if b > max_brightness or b < 0:
+        direction = -direction
+        b = max(0, min(max_brightness, b))
+
 ```
 
 #### 技术参数
@@ -97,17 +114,9 @@ while True:
     time.sleep(0.05)
 ```
 
-#### 使用注意事项
+#### 使用注意事项`
 
-1. **引脚复用**：
-
-```python
-# 错误示例：同一引脚重复配置
-Port1.output_IO(1, 1)  # 配置为输出
-value = Port1.read_IO(1)  # 错误！输出模式下读取状态可能不准确
-```
-
-2. **电平转换**：
+1. **电平转换**：
 
 ```python
 # 5V设备连接需使用电平转换模块
@@ -117,7 +126,7 @@ value = Port1.read_IO(1)  # 错误！输出模式下读取状态可能不准确
 #          3.3V供电
 ```
 
-3. **长线传输**：
+2. **长线传输**：
 
 ```python
 # 超过1米的连接线建议：
@@ -126,16 +135,16 @@ value = Port1.read_IO(1)  # 错误！输出模式下读取状态可能不准确
 # - 使用双绞线
 ```
 
-4. **中断优化**：
+3. **中断优化**：
 
 ```python
 # 高性能按键检测方案
-from machine import Pin
-
 def btn_callback(pin):
-    print(f"引脚 {pin.id()} 触发中断")
+    print(f"Port4 引脚1 触发中断")
 
-Port4.pins[1].irq(handler=btn_callback, trigger=Pi
+Port4._init_pin(1, Pin.IN)  # 初始化引脚为输入模式
+# 设置中断，上升沿触发
+Port4.pins[1].irq(handler=btn_callback, trigger=Pin.IRQ_RISING)
 ```
 
 ---
@@ -177,7 +186,7 @@ adc_value = Port1.read_ADC(pin=1)  # 读取端口1的ADC1引脚
 ##### 基础用法
 
 ```python
-# 读取端口2的ADC2引脚
+# 读取端口2的ADC2引脚,需要接扩展板的S2
 value = Port2.read_ADC(pin=2)
 print(f"ADC原始值: {value}, 电压: {value * 3.6 / 4095 :.2f}V")
 ```
@@ -228,7 +237,7 @@ def filtered_adc(port, pin):
 ```
 
 ##### 电压校准方法
-
+三点校准法是一种简单有效的校准方法，它基于这样一个假设：测量系统的输出（如 ADC 读数）与输入电压之间存在线性关系。通过使用标准电压源提供三个不同的已知电压值，并记录对应的 ADC 读数，就可以得到三个校准点
 ```python
 # 三点校准法（需标准电压源）
 cal_points = {
@@ -245,19 +254,10 @@ cal_points = {
 
 ```python
 # 当使用WiFi功能时，ADC2通道不可用
-Port2.read_ADC(1)  # 端口2的ADC1对应物理引脚33（ADC2_CH5），开启WiFi时会读取失败
+Port2.read_ADC(1)  
 ```
 
-2. **抗干扰措施**：
-
-```python
-# 长导线连接时建议：
-# - 并联0.1μF陶瓷电容在传感器端
-# - 使用屏蔽线
-# - 软件端添加数字滤波
-```
-
-3. **多通道切换**：
+2. **多通道切换**：
 
 ```python
 # 不同ADC通道切换时需要延时
@@ -266,7 +266,7 @@ time.sleep_ms(10)  # 通道切换稳定时间
 Port1.read_ADC(2)
 ```
 
-4. **精度优化**：
+3. **精度优化**：
 
 ```python
 # 通过多次采样提升有效位数
@@ -311,16 +311,16 @@ PortX.output_PWM(pin, freq, duty)
 **示例**：
 
 ```python
-# 初始化端口对象（示例为端口1）
-port1 = Port(1)
-
-# 设置引脚1输出 1000Hz 的PWM，50%占空比
-port1.output_PWM(pin=1, freq=1000, duty=512)
-
-# 呼吸灯效果（需在循环中执行）
-for d in range(0, 1024, 10):
-    port1.output_PWM(1, 1000, d)
-    time.sleep_ms(50)
+while True:
+    # 渐亮过程
+    for duty in range(0, 1024, 4):  # 每次增加4个单位（约0.4%）
+        Port1.output_PWM(pin=1, freq=1000, duty=duty)  # 设置真实PWM
+        time.sleep_ms(10)
+    
+    # 渐暗过程
+    for duty in range(1023, -1, -4):  # 每次减少4个单位
+        Port1.output_PWM(pin=1, freq=1000, duty=duty)
+        time.sleep_ms(10)
 ```
 
 ---
@@ -348,16 +348,12 @@ PortX.servo_angle(pin=1, angle=0)
 **示例**：
 
 ```python
-# 初始化端口对象（示例为端口3）
-port3 = Port(3)
-
-# 控制引脚1的舵机转动到90度
-port3.servo_angle(pin=1, angle=90)
-
+# 初始化端口对象（示例为端口2）
 # 舵机往复运动（需在循环中执行）
 for ang in [0, 90, 180, 90]:
-    port3.servo_angle(angle=ang)
+    Port2.servo_angle(pin=1, angle=ang)
     time.sleep(1)
+
 ```
 
 ---
@@ -381,9 +377,6 @@ for ang in [0, 90, 180, 90]:
     * 舵机需连接至对应端口的引脚1或2
     * 建议外接独立电源供电大功率负载
 
----
-
-此文档可直接提供给开发者作为 API 参考，实际调用时需先实例化对应端口的 Port 对象（如 `Port(1)`​）。
 
 ---
 
@@ -418,16 +411,14 @@ temp, humidity = PortX.DHT11(pin=1)
 **示例**：
 
 ```python
-port4 = Port(4)  # 假设 DHT11 接在端口4
-
-# 读取引脚1的温湿度
-temp, hum = port4.DHT11()
+#传感器接到端口4
+temp, hum = Port4.DHT11()
 if temp is not None:
     print(f"温度: {temp}℃  湿度: {hum}%")
 
 # 循环监测（间隔需大于2秒）
 while True:
-    print(port4.DHT11(pin=1))
+    print(Port4.DHT11(pin=1))
     time.sleep(3)
 ```
 
@@ -459,15 +450,14 @@ temperature = PortX.read_DS18B20(pin=1)
 **示例**：
 
 ```python
-port2 = Port(2)  # DS18B20 接在端口2
-
+# DS18B20 接在端口2
 # 单次读取
-temp = port2.read_DS18B20()
+temp = Port2.read_DS18B20()
 print(f"当前温度：{temp:.1f}℃")
 
 # 温度监控
 while True:
-    print(port2.read_DS18B20(pin=2))  # 指定引脚2
+    print(Port2.read_DS18B20(pin=2))  # 指定引脚2
     time.sleep(1)
 ```
 
@@ -497,16 +487,16 @@ distance = PortX.get_distance()
 **示例**：
 
 ```python
-port3 = Port(3)  # 超声波接在端口3
+# 超声波接在端口3
 
 # 单次测距
-dist = port3.get_distance()
+dist = Port3.get_distance()
 if dist:
     print(f"距离：{dist}cm")
 
 # 连续测距（推荐间隔 >0.1s）
 while True:
-    print(port3.get_distance())
+    print(Port3.get_distance())
     time.sleep(0.2)
 ```
 
@@ -516,47 +506,24 @@ while True:
 
 ```python
 # 环境监测装置（端口4接DHT11，端口2接超声波）
-env_port = Port(4)
-sonic_port = Port(2)
 
 while True:
     # 读取温湿度
-    temp, hum = env_port.DHT11()
+    temp, hum = Port4.DHT11()
   
     # 读取障碍物距离
-    distance = sonic_port.get_distance()
+    distance = Port2.get_distance()
   
     # 数据展示
     print(f"温度: {temp}℃ | 湿度: {hum}% | 前方障碍: {distance}cm")
-    time.sleep(2)
+    time.sleep(0.5)
 ```
 
 ---
 
 ### 注意事项
 
-1. **硬件连接**：
-
-    * DHT11 需接 4.7KΩ 上拉电阻
-    * DS18B20 必须使用寄生供电模式时正确接线
-    * 超声波模块需保持表面清洁
-2. **错误处理**：
-
-    ```python
-    # 典型错误处理流程
-    try:
-        temp = port.read_DS18B20()
-        if temp is None:
-            print("传感器未连接")
-    except Exception as e:
-        print(f"硬件错误: {str(e)}")
-    ```
-3. **性能优化**：
-
-    * 避免高频调用 DHT11（建议间隔 ≥2s）
-    * 超声波测距时保持环境安静
-    * DS18B20 长距离传输时使用屏蔽线
-4. **典型错误值**：
+1. **典型错误值**：
 
     * DHT11 返回 (None, None)：引脚接触不良
     * DS18B20 返回 None：总线无设备
@@ -605,20 +572,19 @@ uuid_bytes = PortX.read_RFID()
 **基础用法**：
 
 ```python
-# 初始化端口（假设 RFID 模块接在端口2）
-port2 = Port(2)
-
-# 单次读取
-card_id = port2.read_RFID()
-if card_id:
-    print("检测到卡片 UUID:", card_id.hex().upper())
+# 初始化端口（RFID 模块接在端口2）
+card_id = Port2.read_RFID()
+if card_id is not None:
+    print("检测到卡片 UUID:", card_id.hex())
+else:
+    print(f"Port{Port2.port_id} 未读取到 RFID 卡")
 ```
 
 **持续监测**：
 
 ```python
 while True:
-    uid = port2.read_RFID()
+    uid = Port2.read_RFID()
     if uid:
         print(f"[{time.localtime()}] 刷卡记录: {uid.hex()}")
     time.sleep(0.5)  # 防止高频读取
@@ -629,17 +595,21 @@ while True:
 ```python
 valid_cards = {
     b'\x12\x34\x56\x78': "管理员卡",
-    b'\x9a\xbc\xde\xf0': "学生卡01"
+    b'\x9a\xbc\xde\xf0': "学生卡01",
+    b'\x43\x85\xd5\x10': "学生卡02",
 }
 
 while True:
-    uid = port2.read_RFID()
-    if uid and uid in valid_cards:
-        print(f"欢迎 {valid_cards[uid]} 用户")
-        # 触发开门动作
-        port2.output_IO(pin=1, value=1)
-        time.sleep(3)
-        port2.output_IO(pin=1, value=0)
+    uid = Port2.read_RFID()
+    if uid:
+        # 将 bytearray 转换为 bytes 类型
+        uid = bytes(uid)
+        if uid in valid_cards:
+            print(f"欢迎 {valid_cards[uid]} 用户")
+            # 触发开门动作
+            Port1.output_IO(pin=1, value=1)
+            time.sleep(3)
+            Port1.output_IO(pin=1, value=0)
 ```
 
 ---
@@ -648,61 +618,20 @@ while True:
 
 |返回值类型|说明|示例|
 | ------------| -----------------------| -------------------------------------|
-|bytes|卡片 UUID 的字节序列|b'\\x12\\x34\\x56\\x78'|
+|bytearray|卡片 UUID 的字节序列|bytearray(b'C\x85\xd5\x10')|
 |None|未检测到卡片/读取失败|None|
 
----
-
-#### 典型应用场景
-
-1. **校园一卡通系统**
-
-```python
-# 注册已授权卡片
-authorized_cards = {
-    b'\x12\x34\x56\x78': "张三-高一(1)班",
-    b'\x9a\xbc\xde\xf0': "李四-高二(3)班"
-}
-
-while True:
-    uid = port3.read_RFID()
-    if uid in authorized_cards:
-        print(f"考勤成功: {authorized_cards[uid]}")
-    else:
-        print("未授权卡片，拒绝访问")
-```
-
-2. **智能储物柜**
-
-```python
-locker_status = {}
-
-# 绑定卡片与柜门
-def bind_locker(card_uid, locker_num):
-    locker_status[card_uid] = locker_num
-    print(f"柜门 {locker_num} 已绑定")
-
-# 开柜验证
-while True:
-    uid = port1.read_RFID()
-    if uid in locker_status:
-        open_locker(locker_status[uid])
-```
 
 ---
 
 #### 注意事项
 
-1. **硬件配置要求**
 
-    * 必须使用端口 **引脚1(SDA)**  和 **引脚2(SCL)**
-    * 需外接 3.3V 电源供电
-    * 避免金属物体遮挡天线区域
-2. **错误处理指南**
+1. **错误处理指南**
 
 ```python
 try:
-    uid = port.read_RFID()
+    uid = Port2.read_RFID()
     if not uid:
         print("请将卡片靠近读卡器")
     elif len(uid) not in [4,7]:
@@ -711,21 +640,11 @@ except Exception as e:
     print("RFID 系统故障:", str(e))
 ```
 
-3. **性能优化建议**
+2. **性能优化建议**
 
     * 读取间隔建议 ≥200ms
     * 多卡片同时出现时可能发生冲突
     * 高温高湿环境可能影响读取距离
-
----
-
-#### 兼容卡片类型
-
-|卡片类型|协议|备注|
-| ----------------| ----------------| -------------------|
-|MIFARE Classic|ISO/IEC 14443A|兼容 S50/S70 芯片|
-|NTAG21x|ISO/IEC 14443A|支持 NFC 数据交换|
-|DESFire|ISO/IEC 14443A|需额外加密处理|
 
 ---
 
@@ -737,18 +656,15 @@ except Exception as e:
 
 该文档介绍了 ACB_MP3 子类通过`PortX.init_mp3()`初始化后，可实现播放控制（`play()`/`pause()`/`nextTrack()`/`previousTrack()`）、音量调节（`setVolume(0-30)`）、文件夹播放（`playInFolder(01-99)`）及状态查询（`getPlayState()`）功能，支持 UART 9600bps 通信和 FAT32 格式 TF 卡，典型应用如控制台交互音乐播放器。
 
-### ACB\_MP3 子类功能摘要
+
 
 #### 1. 模块初始化
 
 ```python
 # 必须通过 Port 实例调用
-mp3 = PortX.init_mp3()  # PortX 需实例化为具体端口号（如 Port(2)）
+mp3 = PortX.init_mp3()  # PortX 需实例化为具体端口号（如 Port2）
 ```
 
----
-
-### 核心控制函数
 
 #### 2. play()
 
@@ -757,8 +673,7 @@ mp3 = PortX.init_mp3()  # PortX 需实例化为具体端口号（如 Port(2)）
 **示例**：
 
 ```python
-port2 = Port(2)
-mp3 = port2.init_mp3()
+mp3 = Port2.init_mp3()
 mp3.play()  # 立即开始播放
 ```
 
@@ -766,27 +681,40 @@ mp3.play()  # 立即开始播放
 
 **功能**：暂停当前播放  
 **协议**：发送 `7E 03 12 11 EF`​  
-**典型应用**：
+**示例**：
 
 ```python
-# 播放/暂停切换
-if is_playing:
-    mp3.pause()
-else:
-    mp3.play()
+mp3 = Port2.init_mp3()
+mp3.play()  # 立即开始播放
+time.sleep(2)
+mp3.pause()  # 暂停播放
 ```
 
 #### 4. nextTrack()
 
 **功能**：切换至下一曲目  
-**协议**：发送 `7E 03 13 10 EF`​  
 **注意**：在循环播放模式下会跳转至列表末尾
+**示例**：
+
+```python
+mp3 = Port2.init_mp3()
+mp3.play()  # 立即开始播放
+time.sleep(2)
+mp3.nextTrack()  # 切换至下一曲目
+```
 
 #### 5. previousTrack()
 
 **功能**：返回上一曲目  
-**协议**：发送 `7E 03 14 17 EF`​  
 **限制**：不支持播放历史回溯
+**示例**：
+
+```python
+mp3 = Port2.init_mp3()
+mp3.play()  # 立即开始播放
+time.sleep(2)
+mp3.previousTrack()  # 返回上一曲目
+```
 
 ---
 
@@ -798,29 +726,34 @@ else:
 
 * `volume`​ (int)：0-30 级音量控制（0\=静音，30\=最大）
 
-**协议**：发送 `7E 04 31 [vol] [checksum] EF`​  
 **示例**：
 
 ```python
-mp3.setVolume(20)  # 设置中等音量
+mp3 = Port2.init_mp3()
+mp3.play()  # 立即开始播放
+time.sleep(0.05)  # 延时等待模块响应
+mp3.setVolume(5)  # 设置音量
+time.sleep(3)
+mp3.setVolume(20)  # 设置音量
+time.sleep(3)
+mp3.setVolume(30)  # 设置音量
 ```
 
-#### 7. playInFolder(folder\_num)
+#### 7. playInFolder(folder\_num , music\_num)
 
 **参数**：
 
 * `folder_num`​ (int)：01-99 文件夹编号（需SD卡预存对应文件夹）
-
-**协议**：发送 `7E 05 42 01 [folder] [checksum] EF`​  
+* `music_num`​ (int)：01-255 文件夹内第几首歌曲
 **文件要求**：
 
 * 文件夹命名格式：`01`​-`99`​
-* 音频文件命名：`001.mp3`​-`255.mp3`​
-
+* 音频文件命名：001XXX.MP3-255XXX.MP3，XXX 可以为中文也可以没有，否则会出错无法播放。
 **使用示例**：
 
 ```python
-mp3.playInFolder(5)  # 播放SD卡中05文件夹的内容
+mp3 = Port2.init_mp3()
+mp3.playInFolder(02,03)  # 播放SD卡中02文件夹下的003 xx.mp3
 ```
 
 #### 8. getPlayState()
@@ -829,39 +762,18 @@ mp3.playInFolder(5)  # 播放SD卡中05文件夹的内容
 **返回值**：无，直接打印状态信息  
 **响应解析**：
 
-* `OK0002`​：播放中
-* `OK0001`​：已暂停
-* `STOP`​：停止
+* 当前播放状态: 播放中
+* 当前播放状态: 暂停
+* 当前播放状态: 停止
 
-**典型输出**：
+**使用示例**：
 
 ```python
+mp3 = Port2.init_mp3()
+mp3.play()  # 立即开始播放
+time.sleep(0.1)
 mp3.getPlayState()
-# 控制台可能输出：当前播放状态: 播放中
-```
-
----
-
-### 综合应用示例
-
-#### 音乐播放器实现
-
-```python
-port4 = Port(4)
-player = port4.init_mp3()
-
-# 初始化设置
-player.setVolume(25)  # 初始音量
-player.playInFolder(2)  # 播放第二文件夹
-
-# 交互控制
-while True:
-    cmd = input("输入操作(p=播放/暂停, n=下一首): ")
-    if cmd == 'p':
-        player.pause() if is_playing else player.play()
-    elif cmd == 'n':
-        player.nextTrack()
-    player.getPlayState()  # 刷新状态显示
+# 控制台输出：当前播放状态: 播放中
 ```
 
 ---
@@ -877,31 +789,6 @@ while True:
 
 ---
 
-### 故障排查指南
-
-1. **无响应**
-
-    * 检查物理连接：确认端口引脚1-RX / 引脚2-TX
-    * 验证SD卡格式：必须为 FAT32 且根目录有 `01`​-`99`​ 文件夹
-2. **杂音干扰**
-
-    * 添加100Ω电阻做阻抗匹配
-    * 确保供电电流 ≥500mA
-3. **指令失效**
-
-    ```python
-    # 调试模式查看原始数据
-    def debug_send(cmd):
-        print("Sent:", cmd.hex())
-        mp3.uart.write(cmd)
-    debug_send(bytearray([0x7E, 0x03, 0x11, 0x12, 0xEF]))
-    ```
-
----
-
-该文档适配型号：JQ8400-FL、APR9600 等常见语音模块，实际使用时需确保硬件协议匹配。
-
----
 
 ## 技术参数对照表
 
@@ -914,60 +801,3 @@ while True:
 
 ---
 
-## 使用注意事项
-
-1. **引脚冲突**：
-
-```python
-# ADC2与WiFi冲突示例
-Port2.read_ADC(1)  # GPIO33属于ADC2，启用WiFi时不可用
-```
-
-2. **PWM 限制**：
-
-```python
-# 同时最多使用8路PWM
-Port1.output_PWM(1,1000,512)
-Port2.output_PWM(2,2000,256)  # 不同端口不冲突
-```
-
-3. **传感器供电**：
-
-```python
-# 给传感器模块供电示例
-Port4.output_IO(1,1)  # 引脚1作为电源控制
-time.sleep(0.1)       # 等待传感器上电
-distance = Port4.get_distance()
-```
-
-4. **多设备协同**：
-
-```python
-# RFID与MP3协同工作
-while True:
-    if Port1.read_RFID():
-        Port1.init_mp3().play()
-        break
-```
-
-5. **滤波算法**：
-
-```python
-# ADC滑动平均滤波
-samples = [Port3.read_ADC(1) for _ in range(10)]
-avg = sum(samples) // len(samples)
-```
-
-6. **异常处理**：
-
-```python
-try:
-    Port2.servo_angle(1, 95)
-except ValueError as e:
-    print("角度超限，自动修正到90度")
-    Port2.servo_angle(1, 90)
-```
-
-‍
-
-‍

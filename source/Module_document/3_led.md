@@ -1,5 +1,8 @@
 # LED 模块方法使用说明
-
+```{admonition} 注意：
+:class: note
+所有类的使用都需要导入库文件：from educator import * 
+```
 ## 1. led.on() - 开启LED
 ```python
 led.on()
@@ -14,7 +17,7 @@ led.on()
 ### 示例
 
 ```
-python# 点亮LED
+# 点亮LED
 led.on()
 ```
 
@@ -23,8 +26,6 @@ led.on()
 ## 2. led.off() - 关闭LED
 
 ```
-python
-
 led.off()
 ```
 
@@ -37,7 +38,7 @@ led.off()
 ### 示例
 
 ```
-python# 关闭LED
+# 关闭LED
 led.off()
 ```
 
@@ -46,8 +47,6 @@ led.off()
 ## 3. led.toggle() - 切换状态
 
 ```
-python
-
 led.toggle()
 ```
 
@@ -60,7 +59,7 @@ led.toggle()
 ### 示例
 
 ```
-python# 创建闪烁效果
+# 创建闪烁效果
 for _ in range(5):
     led.toggle()
     time.sleep(0.5)
@@ -71,8 +70,6 @@ for _ in range(5):
 ## 4. led.set_state() - 状态设置
 
 ```
-python
-
 led.set_state(state)
 ```
 
@@ -91,7 +88,7 @@ led.set_state(state)
 ### 示例
 
 ```
-python# 根据条件控制LED
+# 根据条件控制LED
 if temperature > 30:
     led.set_state(1)  # 高温报警
 else:
@@ -102,26 +99,16 @@ else:
 
 ## 使用注意事项
 
-1. **硬件连接**：
-
-   - 需外接限流电阻（建议220Ω）
-   - 确认GPIO引脚与LED正极连接
-
-2. **状态反馈**：
+1. **状态反馈**：
 
    - 可通过`led.pin.value()`读取当前状态
    - 返回1表示点亮，0表示熄灭
 
-3. **异常处理**：
+2. **异常处理**：
 
    ```
-   pythontry:
+   try:
        led.set_state(2)  # 错误值
    except ValueError as e:
        print("错误：", e)
    ```
-
-4. **功耗控制**：
-
-   - 持续点亮时建议每30分钟切换状态防止过热
-   - 最大持续电流：20mA（需根据LED规格调整）

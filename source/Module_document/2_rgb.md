@@ -1,5 +1,8 @@
 # RGB 模块方法使用说明
-
+```{admonition} 注意：
+:class: note
+所有类的使用都需要导入库文件：from educator import * 
+```
 ## 1. rgb.write_left() - 设置左侧LED颜色
 
 ```python
@@ -19,8 +22,10 @@ rgb.write_left(red, green, blue)
 ```python
 # 设置左侧LED为纯红色
 rgb.write_left(255, 0, 0)
+time.sleep(1)  # 等待 1 秒
 # 设置左侧LED为紫色（混合颜色）
 rgb.write_left(128, 0, 255)
+
 ```
 
 ------
@@ -44,6 +49,7 @@ rgb.write_right(red, green, blue)
 ```python
 # 设置右侧LED为绿色
 rgb.write_right(0, 255, 0)
+time.sleep(1)  # 等待 1 秒
 # 设置右侧LED为白色（全亮）
 rgb.write_right(255, 255, 255)
 ```

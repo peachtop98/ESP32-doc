@@ -24,14 +24,15 @@
 
     ```{admonition} 注意：
     :class: note
-    注意板载只有两个PORT端口，需要接扩展板拓展才有四个PORT端口
+    1. 注意板载只有两个PORT端口，需要接扩展板拓展才有四个PORT端口    
+    2. 所有类的使用都需要导入库文件：from educator import * 
     ```
 
     
 
 ```{toctree}
 :hidden:
-:maxdepth: 2
+:maxdepth: 4
 :caption: 模块文档目录
 1_oled
 2_rgb

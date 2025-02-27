@@ -1,9 +1,14 @@
 # 麦克风模块使用说明
 
-## micro.read() - 读取声音强度
+```{admonition} 注意：
+:class: note
+所有类的使用都需要导入库文件：from educator import * 
+```
+
+## mic.read() - 读取声音强度
 
 ```python
-value = micro.read()
+value = mic.read()
 ```
 
 ### 返回值说明
@@ -17,16 +22,9 @@ value = micro.read()
 ```python
 # 实时声压监测
 while True:
-    db = micro.read()  # 获取原始ADC值
+    db = mic.read()  # 获取原始ADC值
     print(f"当前声强值: {db}")
-    time.sleep(0.1)
-
-# 声控LED开关
-base = micro.read()    # 获取环境底噪
-while True:
-    if abs(micro.read() - base) > 500:  # 检测显著声音变化
-        led.toggle()
-        time.sleep(0.5)
+    time.sleep(0.1) 
 ```
 
 ------
@@ -44,16 +42,7 @@ while True:
 
 ## 使用注意事项
 
-1. 信号处理建议：
-
-```python
-# 快速傅里叶变换采样（需导入FFT库）
-import ulab.numpy as np
-samples = [micro.read() for _ in range(256)]
-fft_result = np.fft.fft(samples)
-```
-
-2. 动态基线校准：
+1. 动态基线校准：
 
 ```python
 # 自动校准环境底噪
@@ -61,29 +50,23 @@ def auto_calibrate(duration=3):
     readings = []
     start = time.ticks_ms()
     while time.ticks_diff(time.ticks_ms(), start) < duration*1000:
-        readings.append(micro.read())
+        readings.append(mic.read())
         time.sleep_ms(10)
     return sum(readings)//len(readings)
 ```
 
-3. 电气特性：
-
-- 采样频率：最高6kHz
-- 信噪比：≥60dB
-- 频率响应：20Hz-20kHz (±3dB)
-
-4. 波形采集示例：
+2. 波形采集示例：
 
 ```python
 # 录制1秒音频（44.1kHz采样率需要约44KB内存）
 audio_data = []
 start = time.ticks_ms()
 while time.ticks_diff(time.ticks_ms(), start) < 1000:
-    audio_data.append(micro.read())
+    audio_data.append(mic.read())
     time.sleep_us(227)  # 约4.4kHz采样率
 ```
 
-5. 噪声过滤技巧：
+3. 噪声过滤技巧：
 
 ```python
 # 数字滤波处理

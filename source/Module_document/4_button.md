@@ -1,5 +1,10 @@
 # 按键模块方法使用说明
 
+```{admonition} 注意：
+:class: note
+所有类的使用都需要导入库文件：from educator import * 
+```
+
 ## 1. button.get_a() - 读取按键A状态
 
 ```python
@@ -16,12 +21,13 @@ state = button.get_a()
 ### 示例
 
 ```python
-# 检测按键A按下动作
-if button.get_a():
-    print("按键A被按下")
-    led.on()
-else:
-    led.off()
+while True:
+    # 检测按键A按下动作
+    if button.get_a():
+        print("按键A被按下")
+        led.on()
+    else:
+        led.off()
 ```
 
 ------
@@ -42,20 +48,18 @@ state = button.get_b()
 ### 示例
 
 ```python
-# 双按键组合检测
-if button.get_a() and button.get_b():
-    print("AB键同时按下")
-    beep.time(1000)  # 触发蜂鸣器
+while True:
+    # 双按键组合检测
+    if button.get_a() and button.get_b():
+        print("AB键同时按下")
+        beep.time(1000)  # 触发蜂鸣器
 ```
 
 ------
 
 ## 使用注意事项
 
-1. 硬件连接：
-   - 按键需接10KΩ上拉电阻
-   - 按键另一端接地（低电平触发）
-2. 防抖处理：
+1. 防抖处理：
 
 ```python
 # 推荐检测逻辑（50ms防抖）
@@ -69,10 +73,6 @@ while True:
     time.sleep_ms(10)
 ```
 
-1. 电气特性：
-   - 按下时GPIO电压：0V
-   - 释放时GPIO电压：3.3V
-   - 最大支持检测频率：100Hz
 2. 异常处理：
 
 ```python
@@ -83,7 +83,7 @@ except KeyboardInterrupt:
     print("按键检测终止")
 ```
 
-1. 多任务支持：
+3. 多任务支持：
 
 ```python
 # 在_thread中使用的示例
