@@ -24,6 +24,9 @@
 ### 系统接口
 - [通用端口](Module_document/10_Port.md) - 多功能物理端口配置（支持GPIO/ADC/PWM/UART）
 
+### 无线通讯
+- [蓝牙模块](Module_document/11_BLE.md) - 蓝牙模块，包含主从设备通信功能实现
+
 
 ---
 

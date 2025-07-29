@@ -22,10 +22,14 @@
 
 - [PORT 类](10_Port.md)：通用拓展接口管理，提供了最多4个多功能物理端口配置
 
+- [BLEMaster 类](11_BLE.md#BLESlave类（蓝牙从设备）)：通用拓展接口管理，提供了最多4个多功能物理端口配置
+
+- [BLESlave 类](11_BLE.md#BLEMaster类蓝牙主设备）)：蓝牙从设备功能实现，支持广播、命令接收和数据响应
+
     ```{admonition} 注意：
     :class: note
     1. 注意板载只有两个PORT端口，需要接扩展板拓展才有四个PORT端口    
-    2. 所有类的使用都需要导入库文件：from educator import * 
+    2. 所有传感器类的使用都需要导入库文件：from educator import * 
     ```
 
     
@@ -44,4 +48,5 @@
 8_micro
 9_Six_axis
 10_Port
+11_BLE
 ```
